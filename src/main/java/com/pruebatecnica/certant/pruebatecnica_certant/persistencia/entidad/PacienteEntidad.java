@@ -58,7 +58,7 @@ public class PacienteEntidad {
     @Pattern(regexp = "^(?i)(Masculino|femenino)$", message = "Porfavor, ingresar correctamente el genero")
     private String genero;
 
-    @OneToMany(targetEntity = TurnosEntidad.class, mappedBy = "pacienteEntidad")
-    List<TurnosEntidad> turnosEntidad;
+    @OneToMany(targetEntity = TurnoEntidad.class, mappedBy = "pacienteEntidad")
+    List<TurnoEntidad> turnosEntidad;
 
 }

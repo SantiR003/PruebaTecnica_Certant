@@ -1,6 +1,5 @@
 package com.pruebatecnica.certant.pruebatecnica_certant.persistencia.entidad;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
 
 import jakarta.persistence.Column;
@@ -19,30 +18,24 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "turno")
+@Table(name = "horario_profesional")
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Valid
 @Builder
-public class TurnosEntidad {
-    @Id
+public class HorarioProfesional {
+
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
     private Long id;
 
-    @Column(name = "fecha_turno", nullable = false)
+    @Column(name = "inicio_turno", nullable = false)
     @NotNull
-    private LocalDate fechaTurno;
-    @Column(name = "hora_turno", nullable = false)
-    @NotNull
-    private LocalTime horaTurno;
-    @Column(name = "motivo_visita", nullable = false)
-    private String motivoVisita;
+    private LocalTime inicioTurno;
 
     @ManyToOne(targetEntity = ProfesionalEntidad.class)
-    @JoinColumn(name = "profesional_id", nullable = false)
-    ProfesionalEntidad profesionalEntidad;
+    @JoinColumn(name = "id_profesional", nullable = false)
+    ProfesionalEntidad profesionaleEntidad;
 
-    @ManyToOne(targetEntity = PacienteEntidad.class)
-    PacienteEntidad pacienteEntidad;
 }

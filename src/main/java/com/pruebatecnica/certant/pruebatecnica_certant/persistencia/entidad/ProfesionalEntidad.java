@@ -59,10 +59,13 @@ public class ProfesionalEntidad {
     private EspecialidadEntidad especialidad;
 
     @ManyToMany(targetEntity = DiaLaboralEntidad.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinTable(name = "profesionales_dias_laborales", joinColumns = @JoinColumn(name = "profesional_id"), inverseJoinColumns = @JoinColumn(name = "dia_laboral_id"))
+    @JoinTable(name = "profesional_dia_laboral", joinColumns = @JoinColumn(name = "profesional_id"), inverseJoinColumns = @JoinColumn(name = "dia_laboral_id"))
     List<DiaLaboralEntidad> diasLaborales;
 
-    @OneToMany(targetEntity = TurnosEntidad.class, mappedBy = "profesionalEntidad")
-    List<TurnosEntidad> turnosEntidad;
+    @OneToMany(targetEntity = TurnoEntidad.class, mappedBy = "profesionalEntidad")
+    List<TurnoEntidad> turnosEntidad;
+
+    @OneToMany(targetEntity = HorarioProfesional.class, mappedBy = "profesionaleEntidad", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<HorarioProfesional> horariosProfesional;
 
 }

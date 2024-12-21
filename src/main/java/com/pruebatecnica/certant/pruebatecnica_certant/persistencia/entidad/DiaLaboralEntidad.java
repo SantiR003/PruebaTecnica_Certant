@@ -26,8 +26,8 @@ public class DiaLaboralEntidad {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "dias_de_la_semana", updatable = false, nullable = false)
-    @Pattern(regexp = "\b(?i)(Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo)\b", message = "Porfavor, ingresar correctamente el dia")
+    @Column(name = "dia_de_la_semana", updatable = false, nullable = false)
+    @Pattern(regexp = "\b(?i)(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b", message = "Porfavor, ingresar correctamente el dia")
     private String dia;
 
 }
