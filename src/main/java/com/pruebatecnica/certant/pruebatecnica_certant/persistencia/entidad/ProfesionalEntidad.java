@@ -3,6 +3,9 @@ package com.pruebatecnica.certant.pruebatecnica_certant.persistencia.entidad;
 import java.time.LocalTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -56,6 +59,7 @@ public class ProfesionalEntidad {
 
     @ManyToOne(targetEntity = EspecialidadEntidad.class)
     @JoinColumn(name = "id_especialidad", nullable = false)
+    @JsonIgnore
     private EspecialidadEntidad especialidad;
 
     @ManyToMany(targetEntity = DiaLaboralEntidad.class, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
@@ -63,9 +67,11 @@ public class ProfesionalEntidad {
     List<DiaLaboralEntidad> diasLaborales;
 
     @OneToMany(targetEntity = TurnoEntidad.class, mappedBy = "profesionalEntidad")
+    @JsonBackReference
     List<TurnoEntidad> turnosEntidad;
 
     @OneToMany(targetEntity = HorarioProfesional.class, mappedBy = "profesionaleEntidad", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
     List<HorarioProfesional> horariosProfesional;
 
 }

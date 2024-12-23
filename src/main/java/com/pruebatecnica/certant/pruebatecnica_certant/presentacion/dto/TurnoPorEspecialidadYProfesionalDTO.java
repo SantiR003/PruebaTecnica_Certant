@@ -13,12 +13,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TurnoPorEspecialidadYProfesionalDTO {
-
     private String nombreEspecialidad;
-    private String nombreProfesional;
-    private String apellidoProfesional;
     private LocalDate fechaTurno;
     private LocalTime horaTurno;
-    private String motivoVisita;
+    private String nombreCompletoPaciente;
     private EstadoTurno estadoTurno;
+    private String nombreCompletoProfesional;
 }

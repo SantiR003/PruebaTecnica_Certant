@@ -3,6 +3,9 @@ package com.pruebatecnica.certant.pruebatecnica_certant.persistencia.entidad;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.pruebatecnica.certant.pruebatecnica_certant.constante.EstadoTurno;
 
 import jakarta.persistence.Column;
@@ -50,9 +53,11 @@ public class TurnoEntidad {
 
     @ManyToOne(targetEntity = ProfesionalEntidad.class)
     @JoinColumn(name = "profesional_id", nullable = false)
+    @JsonManagedReference
     ProfesionalEntidad profesionalEntidad;
 
     @ManyToOne(targetEntity = PacienteEntidad.class)
+    @JsonIgnore
     PacienteEntidad pacienteEntidad;
 
     public TurnoEntidad() {

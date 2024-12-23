@@ -30,7 +30,7 @@ public class EspecilidadServicioImpl implements IEspecilidadServicio {
 
     @Override
     public EspecialidadEntidad findById(Long id) {
-        throw new UnsupportedOperationException("Unimplemented method 'findById'");
+        return null;
     }
 
 }

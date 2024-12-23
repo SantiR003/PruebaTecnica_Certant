@@ -10,16 +10,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.pruebatecnica.certant.pruebatecnica_certant.constante.EstadoTurno;
+import com.pruebatecnica.certant.pruebatecnica_certant.persistencia.entidad.PacienteEntidad;
 import com.pruebatecnica.certant.pruebatecnica_certant.persistencia.entidad.ProfesionalEntidad;
 import com.pruebatecnica.certant.pruebatecnica_certant.persistencia.entidad.TurnoEntidad;
+import com.pruebatecnica.certant.pruebatecnica_certant.persistencia.repositorio.PacienteRepositorio;
 import com.pruebatecnica.certant.pruebatecnica_certant.persistencia.repositorio.ProfesionalRepositorio;
 import com.pruebatecnica.certant.pruebatecnica_certant.persistencia.repositorio.TurnoRepositorio;
 import com.pruebatecnica.certant.pruebatecnica_certant.presentacion.dto.TurnoDTO;
 import com.pruebatecnica.certant.pruebatecnica_certant.presentacion.dto.TurnoPorEspecialidadYProfesionalDTO;
 import com.pruebatecnica.certant.pruebatecnica_certant.presentacion.dto.TurnoPorPacienteDTO;
+import com.pruebatecnica.certant.pruebatecnica_certant.servicio.excepcion.TurnoFueraDeDiasHabilesClinicaException;
+import com.pruebatecnica.certant.pruebatecnica_certant.servicio.excepcion.TurnoFueraDeDiasHabilesProfesionalException;
+import com.pruebatecnica.certant.pruebatecnica_certant.servicio.excepcion.TurnoFueraDeLosHorariosEstablecidosProfesionalException;
+import com.pruebatecnica.certant.pruebatecnica_certant.servicio.excepcion.TurnoFueraDelHorarioLaboralProfesionalException;
 import com.pruebatecnica.certant.pruebatecnica_certant.servicio.excepcion.TurnoInvalidoException;
+import com.pruebatecnica.certant.pruebatecnica_certant.servicio.excepcion.TurnoYaExistenteException;
 import com.pruebatecnica.certant.pruebatecnica_certant.servicio.interfaces.ITurnoServicio;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -30,6 +39,8 @@ public class TurnoServicioImpl implements ITurnoServicio {
     TurnoRepositorio turnoRepositorio;
     @Autowired
     ProfesionalRepositorio profesionalRepositorio;
+    @Autowired
+    PacienteRepositorio pacienteRepositorio;
 
     @Override
     @Transactional(readOnly = true)
@@ -42,22 +53,35 @@ public class TurnoServicioImpl implements ITurnoServicio {
         } else {
             List<TurnoDTO> listaTurnosDTO = listaTurnos.stream().map(turno -> {
                 TurnoDTO turnoDTO = new TurnoDTO();
-                turnoDTO.setNombre(turno.getPacienteEntidad().getNombre());
-                turnoDTO.setApellido(turno.getPacienteEntidad().getApellido());
-                turnoDTO.setDni(turno.getPacienteEntidad().getDni());
+                turnoDTO.setId(turno.getId());
                 turnoDTO.setFechaTurno(turno.getFechaTurno());
                 turnoDTO.setHoraTurno(turno.getHoraTurno());
-                turnoDTO.setEstadoTurno(turno.getEstadoTurno());
                 turnoDTO.setMotivoVisita(turno.getMotivoVisita());
-                turnoDTO.setNombreProfesional(turno.getProfesionalEntidad().getNombre());
-                turnoDTO.setApellidoProfesional(turno.getProfesionalEntidad().getApellido());
-                turnoDTO.setConsultorio(turno.getProfesionalEntidad().getConsultorio());
+                turnoDTO.setProfesionalId(turno.getProfesionalEntidad().getId());
+                turnoDTO.setPacienteDni(turno.getPacienteEntidad().getDni());
+                turnoDTO.setEstadoTurno(turno.getEstadoTurno());
                 turnoDTO.setEspecialidad(turno.getProfesionalEntidad().getEspecialidad().getNombre());
                 return turnoDTO;
             }).toList();
 
             return listaTurnosDTO;
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public TurnoDTO findById(Long id) {
+        TurnoEntidad turno = turnoRepositorio.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Profesional no encontrado"));
+
+        TurnoDTO turnoDTO = new TurnoDTO();
+        turnoDTO.setId(turno.getId());
+        turnoDTO.setFechaTurno(turno.getFechaTurno());
+        turnoDTO.setHoraTurno(turno.getHoraTurno());
+        turnoDTO.setMotivoVisita(turno.getMotivoVisita());
+        turnoDTO.setProfesionalId(turno.getProfesionalEntidad().getId());
+        turnoDTO.setPacienteDni(turno.getPacienteEntidad().getDni());
+        return turnoDTO;
     }
 
     @Override
@@ -73,21 +97,46 @@ public class TurnoServicioImpl implements ITurnoServicio {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(TurnoEntidad turnosEntidad, Long id) {
+    public void intermediario(TurnoDTO turnoDTO) {
+
+        ProfesionalEntidad profesional = profesionalRepositorio.findById(turnoDTO.getProfesionalId())
+                .orElseThrow(() -> new EntityNotFoundException("Profesional no encontrado"));
+        PacienteEntidad paciente = pacienteRepositorio.findByDni(turnoDTO.getPacienteDni())
+                .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado"));
+
+        TurnoEntidad turno = new TurnoEntidad();
+        turno.setFechaTurno(turnoDTO.getFechaTurno());
+        turno.setHoraTurno(turnoDTO.getHoraTurno());
+        turno.setMotivoVisita(turnoDTO.getMotivoVisita());
+        turno.setProfesionalEntidad(profesional);
+        turno.setPacienteEntidad(paciente);
+
+        save(turno);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void update(TurnoDTO turnoDTO, Long id) {
+        ProfesionalEntidad profesional = profesionalRepositorio.findById(turnoDTO.getProfesionalId())
+                .orElseThrow(() -> new EntityNotFoundException("Profesional no encontrado"));
+        PacienteEntidad paciente = pacienteRepositorio.findByDni(turnoDTO.getPacienteDni())
+                .orElseThrow(() -> new EntityNotFoundException("Paciente no encontrado"));
         if (ValidarHorarioTurno(id)) {
             try {
                 TurnoEntidad turnoDesactualizado = turnoRepositorio.findById(id).orElse(null);
-
                 if (turnoDesactualizado == null) {
                     throw new RuntimeException("Turno no encontrado: " + id);
                 }
-                turnoDesactualizado.setFechaTurno(turnosEntidad.getFechaTurno());
-                turnoDesactualizado.setHoraTurno(turnosEntidad.getHoraTurno());
-                turnoDesactualizado.setMotivoVisita(turnosEntidad.getMotivoVisita());
-                turnoDesactualizado.setEstadoTurno(turnosEntidad.getEstadoTurno());
-                turnoDesactualizado.setPacienteEntidad(turnosEntidad.getPacienteEntidad());
-                turnoDesactualizado.setProfesionalEntidad(turnosEntidad.getProfesionalEntidad());
-                turnoRepositorio.save(turnoDesactualizado);
+                turnoDesactualizado.setFechaTurno(turnoDTO.getFechaTurno());
+                turnoDesactualizado.setHoraTurno(turnoDTO.getHoraTurno());
+                turnoDesactualizado.setMotivoVisita(turnoDTO.getMotivoVisita());
+                turnoDesactualizado.setPacienteEntidad(paciente);
+                turnoDesactualizado.setProfesionalEntidad(profesional);
+                if (VerificarHorarioYFecha(turnoDesactualizado) && ValidarDisponibilidadTurno(turnoDesactualizado)) {
+                    turnoRepositorio.save(turnoDesactualizado);
+                } else {
+                    log.error("Las validaciones de fecha y disponibilidad fallaron.");
+                }
             } catch (Exception e) {
                 throw new RuntimeException("Ocurrio un error al actualizar el turno: " + id);
             }
@@ -98,17 +147,17 @@ public class TurnoServicioImpl implements ITurnoServicio {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long id) {
+    public void cambiarEstadoTurno(Long id, EstadoTurno estadoTurno) {
+        TurnoEntidad turno = turnoRepositorio.findById(id).orElse(null);
+        if (turno == null) {
+            throw new RuntimeException("Turno no encontrado: " + id);
+        }
         if (ValidarHorarioTurno(id)) {
             try {
-                TurnoEntidad turnoAEliminar = turnoRepositorio.findById(id).orElse(null);
-
-                if (turnoAEliminar == null) {
-                    throw new RuntimeException("Turno no encontrado: " + id);
-                }
-                turnoRepositorio.delete(turnoAEliminar);
+                turno.setEstadoTurno(estadoTurno);
+                save(turno);
             } catch (Exception e) {
-                throw new RuntimeException("Ocurrio un error al eliminar el turno: " + id);
+                throw new RuntimeException("Ocurrio un error al actualizar el turno: " + id);
             }
         } else {
             log.error("Accion invalida a menos de una hora de efectuar el turno ", Exception.class);
@@ -123,15 +172,15 @@ public class TurnoServicioImpl implements ITurnoServicio {
         } else {
             List<TurnoPorPacienteDTO> listaPacienteTurnoDTO = listaTurnos.stream().map(turno -> {
                 TurnoPorPacienteDTO pacienteTurnoDTO = new TurnoPorPacienteDTO();
-                pacienteTurnoDTO.setNombre(turno.getPacienteEntidad().getNombre());
-                pacienteTurnoDTO.setApellido(turno.getPacienteEntidad().getApellido());
+                pacienteTurnoDTO.setNombreCompletoPaciente(
+                        turno.getPacienteEntidad().getNombre() + " " + turno.getPacienteEntidad().getApellido());
                 pacienteTurnoDTO.setDni(turno.getPacienteEntidad().getDni());
                 pacienteTurnoDTO.setFechaTurno(turno.getFechaTurno());
                 pacienteTurnoDTO.setHoraTurno(turno.getHoraTurno());
                 pacienteTurnoDTO.setEstadoTurno(turno.getEstadoTurno());
                 pacienteTurnoDTO.setMotivoVisita(turno.getMotivoVisita());
-                pacienteTurnoDTO.setNombreProfesional(turno.getProfesionalEntidad().getNombre());
-                pacienteTurnoDTO.setApellidoProfesional(turno.getProfesionalEntidad().getApellido());
+                pacienteTurnoDTO.setNombreCompletoProfesional(
+                        turno.getProfesionalEntidad().getNombre() + " " + turno.getProfesionalEntidad().getApellido());
                 return pacienteTurnoDTO;
             }).toList();
             return listaPacienteTurnoDTO;
@@ -139,28 +188,18 @@ public class TurnoServicioImpl implements ITurnoServicio {
     }
 
     @Override
-    public List<TurnoPorEspecialidadYProfesionalDTO> findByEspecialidadAndProfesionalId(Long id, Long id2) {
-        List<TurnoEntidad> listaTurnos = turnoRepositorio.findByEspecialidadAndProfesionalId(id, id2);
-        if (listaTurnos.isEmpty()) {
-            return Collections.emptyList();
-        } else {
-            List<TurnoPorEspecialidadYProfesionalDTO> listaPacienteTurnoDTO = listaTurnos.stream().map(turno -> {
-                TurnoPorEspecialidadYProfesionalDTO especialidadYProfesionalDTO = new TurnoPorEspecialidadYProfesionalDTO();
-                especialidadYProfesionalDTO
-                        .setNombreEspecialidad(turno.getProfesionalEntidad().getEspecialidad().getNombre());
-                especialidadYProfesionalDTO.setNombreProfesional(turno.getProfesionalEntidad().getNombre());
-                especialidadYProfesionalDTO.setApellidoProfesional(turno.getProfesionalEntidad().getApellido());
-                especialidadYProfesionalDTO.setFechaTurno(turno.getFechaTurno());
-                especialidadYProfesionalDTO.setHoraTurno(turno.getHoraTurno());
-                especialidadYProfesionalDTO.setMotivoVisita(turno.getMotivoVisita());
-                especialidadYProfesionalDTO.setEstadoTurno(turno.getEstadoTurno());
-                return especialidadYProfesionalDTO;
-            }).toList();
-            return listaPacienteTurnoDTO;
-        }
+    public List<TurnoPorEspecialidadYProfesionalDTO> findByEspecialidadId(Long id) {
+        List<TurnoEntidad> listaTurnos = turnoRepositorio.findByEspecialidad(id);
+        return listaTurnos.isEmpty() ? Collections.emptyList() : findByEspecialidadOProfesional(listaTurnos);
     }
 
-    // region Validaciones
+    @Override
+    public List<TurnoPorEspecialidadYProfesionalDTO> findByProfesionalId(Long id) {
+        List<TurnoEntidad> listaTurnos = turnoRepositorio.findByProfesional(id);
+        return listaTurnos.isEmpty() ? Collections.emptyList() : findByEspecialidadOProfesional(listaTurnos);
+    }
+
+    // region Validaciones-filtracion
 
     private Boolean VerificarHorarioYFecha(TurnoEntidad turnosEntidad) {
 
@@ -179,29 +218,34 @@ public class TurnoServicioImpl implements ITurnoServicio {
         // actual.
 
         if (!validacionDia) {
-            log.error("No se puede dar un turno fuera de los dias habiles de la clinica", Exception.class);
+            throw new TurnoFueraDeDiasHabilesClinicaException(
+                    "No se puede dar un turno fuera de los dias habiles de la clinica");
         }
 
         boolean validacionDiaProfesional = profesionalEntidad.getDiasLaborales()
                 .stream().anyMatch(dia -> dia.getDia().equals(turnosEntidad.getFechaTurno().getDayOfWeek().name()));
 
         if (!validacionDiaProfesional) {
-            log.error("No se puede dar un turno fuera de los dias laborales del profesional", Exception.class);
+            throw new TurnoFueraDeDiasHabilesProfesionalException(
+                    "No se puede dar un turno fuera de los dias laborales del profesional");
         }
 
         boolean validacionHora = profesionalEntidad.getInicioJornada().isBefore(turnosEntidad.getHoraTurno())
-                && profesionalEntidad.getFinalizacionJornada()
-                        .isAfter(turnosEntidad.getHoraTurno());
+                || profesionalEntidad.getInicioJornada().equals(turnosEntidad.getHoraTurno())
+                        && profesionalEntidad.getFinalizacionJornada()
+                                .isAfter(turnosEntidad.getHoraTurno());
 
         if (!validacionHora) {
-            log.error("No se puede dar un turno fuera del horario laboral del profesional", Exception.class);
+            throw new TurnoFueraDelHorarioLaboralProfesionalException(
+                    "No se puede dar un turno fuera del horario laboral del profesional");
         }
 
         boolean validarHoraTurno = profesionalEntidad.getHorariosProfesional().stream()
                 .anyMatch(horario -> horario.getInicioTurno().equals(turnosEntidad.getHoraTurno()));
 
         if (!validarHoraTurno) {
-            log.error("No se puede dar un turno que no coincida con los horarios establecidos", Exception.class);
+            throw new TurnoFueraDeLosHorariosEstablecidosProfesionalException(
+                    "No se puede dar un turno que no coincida con los horarios establecidos");
         }
         return validacionDia && validacionDiaProfesional && validacionHora && validarHoraTurno;
     }
@@ -212,11 +256,11 @@ public class TurnoServicioImpl implements ITurnoServicio {
 
         boolean validacionDisponibilidad = listaTurnos.stream()
                 .anyMatch(turno -> turno.getFechaTurno().equals(turnoEntidad.getFechaTurno())
-                        && turno.getHoraTurno().equals(turnoEntidad.getHoraTurno()));
+                        && turno.getHoraTurno().equals(turnoEntidad.getHoraTurno())
+                        && !turno.getId().equals(turnoEntidad.getId()));
 
         if (validacionDisponibilidad) {
-            log.error("El turno solicitado ya fue dado para esa fecha y hora", Exception.class);
-            return false;
+            throw new TurnoYaExistenteException("El turno solicitado ya fue dado para esa fecha y hora");
         }
 
         return true;
@@ -228,10 +272,27 @@ public class TurnoServicioImpl implements ITurnoServicio {
         LocalDateTime fechaHoraTurno = LocalDateTime.of(turnoEntidad.getFechaTurno(), turnoEntidad.getHoraTurno());
         // Convierto la hora y fecha del turno en uno solo para comparar correctamente
         // la condicion
-        if (fechaHoraTurno.isBefore(localDateTime.minusHours(1))) {
+        if (localDateTime.isBefore(fechaHoraTurno.minusHours(1)) || localDateTime.isAfter(fechaHoraTurno)) {
             return true;
         }
         return false;
+    }
+
+    private List<TurnoPorEspecialidadYProfesionalDTO> findByEspecialidadOProfesional(List<TurnoEntidad> listaTurnos) {
+        List<TurnoPorEspecialidadYProfesionalDTO> listaPacienteTurnoDTO = listaTurnos.stream().map(turno -> {
+            TurnoPorEspecialidadYProfesionalDTO especialidadYProfesionalDTO = new TurnoPorEspecialidadYProfesionalDTO();
+            especialidadYProfesionalDTO
+                    .setNombreEspecialidad(turno.getProfesionalEntidad().getEspecialidad().getNombre());
+            especialidadYProfesionalDTO.setNombreCompletoProfesional(
+                    turno.getProfesionalEntidad().getNombre() + " " + turno.getProfesionalEntidad().getApellido());
+            especialidadYProfesionalDTO.setNombreCompletoPaciente(
+                    turno.getPacienteEntidad().getNombre() + " " + turno.getPacienteEntidad().getApellido());
+            especialidadYProfesionalDTO.setFechaTurno(turno.getFechaTurno());
+            especialidadYProfesionalDTO.setHoraTurno(turno.getHoraTurno());
+            especialidadYProfesionalDTO.setEstadoTurno(turno.getEstadoTurno());
+            return especialidadYProfesionalDTO;
+        }).toList();
+        return listaPacienteTurnoDTO;
     }
 
     // endregion

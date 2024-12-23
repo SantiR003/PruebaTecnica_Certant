@@ -20,8 +20,8 @@ public class EspecialidadControlador {
     @Autowired
     IEspecilidadServicio iEspecilidadServicio;
 
-    @GetMapping("/findAll")
-    public ResponseEntity<?> findAll() {
+    @GetMapping("/traerTodos")
+    public ResponseEntity<?> traerTodos() {
         try {
             List<String> listaEspecialidades = iEspecilidadServicio.findAll();
             return ResponseEntity.ok(listaEspecialidades);

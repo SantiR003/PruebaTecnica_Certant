@@ -2,6 +2,8 @@ package com.pruebatecnica.certant.pruebatecnica_certant.persistencia.entidad;
 
 import java.time.LocalTime;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -36,6 +38,7 @@ public class HorarioProfesional {
 
     @ManyToOne(targetEntity = ProfesionalEntidad.class)
     @JoinColumn(name = "id_profesional", nullable = false)
+    @JsonManagedReference
     ProfesionalEntidad profesionaleEntidad;
 
 }

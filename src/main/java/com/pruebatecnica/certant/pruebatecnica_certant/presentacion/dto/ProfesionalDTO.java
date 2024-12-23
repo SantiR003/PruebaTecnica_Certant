@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class ProfesionalDTO {
+    private Long id;
     private String nombre;
     private String apellido;
     private LocalTime inicioJornada;

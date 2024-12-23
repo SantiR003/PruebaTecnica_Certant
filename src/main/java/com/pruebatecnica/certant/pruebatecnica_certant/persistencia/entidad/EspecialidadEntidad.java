@@ -2,6 +2,9 @@ package com.pruebatecnica.certant.pruebatecnica_certant.persistencia.entidad;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -36,5 +39,6 @@ public class EspecialidadEntidad {
     private String nombre;
 
     @OneToMany(targetEntity = ProfesionalEntidad.class, mappedBy = "especialidad", cascade = CascadeType.PERSIST)
+    @JsonManagedReference
     List<ProfesionalEntidad> profesionales;
 }

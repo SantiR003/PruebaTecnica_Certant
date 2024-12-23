@@ -29,8 +29,8 @@ public class PacienteControlador {
     @Autowired
     IPacienteServicio iPacienteServicio;
 
-    @GetMapping("/findAll")
-    public ResponseEntity<?> findAll() {
+    @GetMapping("/traerTodos")
+    public ResponseEntity<?> traerTodos() {
         try {
             List<PacienteEntidad> listaPacientes = iPacienteServicio.findAll();
             return ResponseEntity.ok(listaPacientes);
@@ -45,8 +45,24 @@ public class PacienteControlador {
         }
     }
 
-    @PostMapping("/save")
-    public ResponseEntity<?> save(@RequestBody @Valid PacienteEntidad pacienteEntidad) {
+    @GetMapping("/traerPorDni/{dni}")
+    public ResponseEntity<?> traerPorDni(@PathVariable String dni) {
+        try {
+            PacienteEntidad paciente = iPacienteServicio.findByDni(dni);
+            return ResponseEntity.ok(paciente);
+        } catch (DataAccessException e) {
+            String mensajeError = "Error al intentar acceder a los datos: " + e.getMessage();
+            System.err.println(mensajeError);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
+        } catch (Exception e) { /* devolver lista vacia */
+            String mensajeError = "Error al acceder a los pacientes: " + e.getMessage();
+            System.err.println(mensajeError);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.emptyList());
+        }
+    }
+
+    @PostMapping("/guardar")
+    public ResponseEntity<?> guardar(@RequestBody @Valid PacienteEntidad pacienteEntidad) {
         try {
             iPacienteServicio.save(pacienteEntidad);
             return ResponseEntity.ok("Paciente guardado con exito");
@@ -62,8 +78,8 @@ public class PacienteControlador {
         }
     }
 
-    @PutMapping("/update/{id}")
-    public ResponseEntity<?> update(@RequestBody @Valid PacienteEntidad pacienteEntidad, @PathVariable Long id) {
+    @PutMapping("/actualizar/{id}")
+    public ResponseEntity<?> actualizar(@RequestBody @Valid PacienteEntidad pacienteEntidad, @PathVariable Long id) {
         try {
             iPacienteServicio.update(pacienteEntidad, id);
             return ResponseEntity.ok("Paciente actualizado con exito");
@@ -79,8 +95,8 @@ public class PacienteControlador {
         }
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id) {
+    @DeleteMapping("/eliminar/{id}")
+    public ResponseEntity<?> eliminar(@PathVariable Long id) {
         try {
             iPacienteServicio.delete(id);
             return ResponseEntity.ok("Paciente eliminado con exito");

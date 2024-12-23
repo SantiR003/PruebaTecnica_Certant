@@ -3,6 +3,9 @@ package com.pruebatecnica.certant.pruebatecnica_certant.persistencia.entidad;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -55,10 +58,11 @@ public class PacienteEntidad {
     @NotNull
     private LocalDate fechaNacimiento;
     @Column(nullable = false)
-    @Pattern(regexp = "^(?i)(Masculino|femenino)$", message = "Porfavor, ingresar correctamente el genero")
+    @Pattern(regexp = "^(?i)(Masculino|Femenino)$", message = "Porfavor, ingresar correctamente el genero")
     private String genero;
 
     @OneToMany(targetEntity = TurnoEntidad.class, mappedBy = "pacienteEntidad")
+    @JsonIgnore
     List<TurnoEntidad> turnosEntidad;
 
 }

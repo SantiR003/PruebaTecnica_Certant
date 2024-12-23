@@ -29,6 +29,12 @@ public class PacienteServicioImpl implements IPacienteServicio {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public PacienteEntidad findByDni(String dni) {
+        return pacienteRepositorio.findByDni(dni).orElse(null);
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public void save(PacienteEntidad pacienteEntidad) {
         pacienteRepositorio.save(pacienteEntidad);

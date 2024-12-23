@@ -10,6 +10,8 @@ public interface IPacienteServicio {
 
     PacienteEntidad findById(Long id);
 
+    PacienteEntidad findByDni(String dni);
+
     void save(PacienteEntidad pacienteEntidad);
 
     void update(PacienteEntidad pacienteEntidad, Long id);
